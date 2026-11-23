@@ -1,0 +1,39 @@
+# 应用配置模板：复制为 conf/set.properties 后按实际环境填写
+# conf/set.properties 已在 .gitignore 中排除，不要提交真实配置
+
+# 服务对外地址（宿主 IP 或域名）
+ServerIp=http://YOUR_HOST
+nginxIp=http://YOUR_HOST:19520
+
+# MQTT（应用内通过容器内 socat 转发到 emqx 服务）
+mqttServerIp=127.0.0.1
+mqttServerPort=1883
+
+# Redis（compose 内服务名）
+redis.host=redis
+redis.port=6379
+redis.password=
+redis.timeout=5000
+redis.maxIdle=50
+redis.minIdle=100
+redis.maxTotal=100
+redis.maxWaitMillis=3000
+
+# 素材目录（容器内路径）
+localNginxResourcePath=/data/nginx
+
+# 初始化状态：首次部署保持 0，完成初始化后由程序写入
+attestationFlag=0
+
+# 分页与版本信息（按实际应用版本填写）
+page.pageSize=17
+updateVersion=V3.7.10
+
+# 邮件与告警按需开启
+smtpIsSSL=1
+smtpPort=465
+smtpAlarmOpen=false
+autoSendEMail=
+
+# Office 转换：0=WPS/Office，1=LibreOffice（容器内建议 1）
+winWpsOrLibreOffice=1

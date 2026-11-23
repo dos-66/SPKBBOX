@@ -1,0 +1,34 @@
+# 运行期数据与产物（不入库）
+mysql-data/
+redis-data/
+emqx-data/
+apm-logs/
+apm_file/
+html/
+app/tomcat/
+sql/*.sql
+backup-*/
+*.tar.gz
+*.tgz
+*.log
+
+# 本地配置（含口令）
+conf/set.properties
+.env
+
+# 调试与临时文件
+out/
+patch/
+*.bak
+*.bak2
+chk.html
+office_*.html
+office_*.json
+menu*.json
+sample.docx
+
+# 系统文件
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

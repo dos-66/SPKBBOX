@@ -1,0 +1,98 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: apm-mysql
+    command: >
+      --character-set-server=utf8
+      --collation-server=utf8_general_ci
+      --lower-case-table-names=1
+      --max-connections=500
+      --innodb-flush-log-at-trx-commit=0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-apmw}
+      TZ: Asia/Shanghai
+    ports:
+      - "3317:3306"
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:6.2
+    container_name: apm-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  emqx:
+    image: emqx/emqx:4.3.15
+    container_name: apm-emqx
+    environment:
+      EMQX_NODE__NAME: emqx@apm-emqx
+      EMQX_NODE__COOKIE: ${EMQX_COOKIE}
+      EMQX_LISTENER__TCP__EXTERNAL: 0.0.0.0:1883
+      EMQX_LISTENER__WS__EXTERNAL: 0.0.0.0:8083
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+    volumes:
+      - ./emqx-data:/opt/emqx/data
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+
+  apm-web:
+    build: ./app
+    image: apm-web:local
+    container_name: apm-web
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      emqx:
+        condition: service_started
+    ports:
+      - "8283:8283"
+      - "19527:19527"
+      - "9999:9999/udp"
+    volumes:
+      - ./conf/set.properties:/opt/tomcat/webapps/apm-web/WEB-INF/classes/set.properties
+      - ./apm_file:/data/apm_file
+      - ./apm_file:/data/nginx/apm_file
+      - ./apm-logs:/opt/tomcat/logs
+    environment:
+      TZ: Asia/Shanghai
+      MQTT_HOST: emqx
+      REDIS_HOST: redis
+
+  nginx:
+    image: nginx:1.21.1
+    container_name: apm-nginx
+    depends_on:
+      - apm-web
+    ports:
+      - "80:80"
+      - "19520:19520"
+    volumes:
+      - ./nginx/apm.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./apm_file:/usr/share/nginx/html/apm_file:ro
+      - ./html:/usr/share/nginx/apm-html:ro
+
+volumes: {}
