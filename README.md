@@ -1,4 +1,4 @@
-# apm-docker：APM 数字标牌后台 · 容器化部署骨架
+# SPKBBOX：APM 数字标牌后台 · 容器化部署骨架
 
 一个把「Tomcat 应用 + MySQL + Redis + EMQX + Nginx」组合成单机容器栈的部署骨架，用于替代传统的 Windows 安装包部署方式。
 
@@ -100,6 +100,34 @@ docker compose ps          # 等待 apm-web 变为 healthy（首次约 2-3 分�
     ├── backup.sh               # 备份镜像/库/素材/配置为 tar.gz
     └── restore.sh              # 从备份包恢复
 ```
+
+## 容器镜像
+
+应用镜像已发布到 GitHub Container Registry，包名 `spkbbox`，**私有**（需授权账号拉取）：
+
+| Tag | 说明 |
+| --- | --- |
+| `ghcr.io/dos-66/spkbbox:latest` | 最新构建 |
+| `ghcr.io/dos-66/spkbbox:20261123` | 按日期标记 |
+
+digest：`sha256:c613e06983c3e7f5fa7d79e4beeaa290f2c962ecc991aca3b90b43f86f7e949a`
+
+拉取前先登录（token 需 `read:packages` 权限）：
+
+```bash
+echo "$GHCR_TOKEN" | docker login ghcr.io -u <你的GitHub用户名> --password-stdin
+docker pull ghcr.io/dos-66/spkbbox:latest
+```
+
+也可在 `docker-compose.yml` 里直接用镜像替代本地构建：
+
+```yaml
+apm-web:
+  image: ghcr.io/dos-66/spkbbox:latest
+  # build: ./app   # 本地构建时保留
+```
+
+镜像内含应用二开代码，故设为私有包；本仓库公开部分仍只有编排与脚本。
 
 ## 备份与恢复
 
